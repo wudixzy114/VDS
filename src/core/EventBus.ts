@@ -1,12 +1,25 @@
-import type {BusEvent} from "./types";
+import type {BusEvent, EphemeralFeedback} from "./types";
 
 type Listener<E extends BusEvent> = (event: E) => void | Promise<void>;
 export type Unsubscribe = () => void;
+type ErrorHandler = (error: unknown, context: { eventName: string, listener: Function }) => void;
 
 export class EventBus<T extends BusEvent = BusEvent> {
+    private globalListeners: Set<Listener<T>> = new Set();
     private listeners: Map<string, Set<Listener<T>>> = new Map();
+    private onUnhandledError: ErrorHandler;
+
+    constructor(onUnhandledError: ErrorHandler = (error, context) => {
+        console.error(`[EventBus] Unhandled error in listener for event "${context.eventName}":`, error);
+    }) {
+        this.onUnhandledError = onUnhandledError;
+    }
 
     public subscribe(eventName: string, listener: Listener<T>): Unsubscribe {
+        if (eventName === '*') {
+            this.globalListeners.add(listener);
+            return () => this.globalListeners.delete(listener);
+        }
         if (!this.listeners.has(eventName)) {
             this.listeners.set(eventName, new Set());
         }
@@ -23,23 +36,21 @@ export class EventBus<T extends BusEvent = BusEvent> {
     }
 
     public publish(event: T): void {
-        const eventListeners = this.listeners.get(event.name);
-        if (!eventListeners || eventListeners.size === 0) {
-            return;
-        }
+        const specificListeners = this.listeners.get(event.name);
+        const allListeners = new Set([...(specificListeners || []), ...this.globalListeners]);
 
-        for (const listener of [...eventListeners]) {
+        if (allListeners.size === 0) return;
+
+        for (const listener of [...allListeners]) {
             try {
                 const result = listener(event);
                 if (result instanceof Promise) {
                     result.catch(error => {
-                        // TODO
-                        console.error(`[EventBus] Asynchronous listener for event "${event.name}" rejected with error:`, error);
+                        this.onUnhandledError(error, {eventName: event.name, listener});
                     });
                 }
             } catch (error) {
-                // TODO
-                console.error(`[EventBus] Synchronous listener for event "${event.name}" threw an error:`, error);
+                this.onUnhandledError(error, {eventName: event.name, listener});
             }
         }
     }

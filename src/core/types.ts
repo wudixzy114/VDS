@@ -63,3 +63,16 @@ export type StateListener = (newState: CoreState) => void;
 export type BusEvent = DomainEvent | EphemeralFeedback;
 
 export type Projector = (currentState: CoreState, event: DomainEvent) => CoreState;
+
+export type HandlerResult =
+    | DomainEvent
+    | EphemeralFeedback
+    | void
+    | (DomainEvent | EphemeralFeedback)[];
+
+export type CommandHandler = (
+    getState: () => CoreState,
+    command: Command
+) => Promise<HandlerResult>;
+
+export type CommandHandlerMap = Record<string, CommandHandler>
