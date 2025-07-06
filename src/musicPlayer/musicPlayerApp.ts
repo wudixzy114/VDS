@@ -1,10 +1,11 @@
 import type {Blueprint, CommandHandlerMap} from '../core/types';
+import {createBlueprint} from "../utils/blueprint";
 
 // ===================================================================
 // 1. 应用蓝图 (The Blueprint)
 //    这是应用的“宪法”，定义了所有可能性。
 // ===================================================================
-export const musicPlayerBlueprint: Blueprint = {
+export const musicPlayerBlueprint: Blueprint = createBlueprint({
     version: "1.0",
     appName: "VDS Music Player",
     clusters: {
@@ -13,12 +14,12 @@ export const musicPlayerBlueprint: Blueprint = {
             stateGroups: {
                 playback: {
                     initial: "stopped",
-                    states: ["stopped", "playing", "paused", "loading"],
+                    states: ["stopped", "playing", "paused", "loading"] as const,
                     description: "播放器的宏观操作状态"
                 },
                 track: {
                     initial: "noTrack",
-                    states: ["noTrack", "trackLoaded", "trackError"],
+                    states: ["noTrack", "trackLoaded", "trackError"] as const,
                     description: "当前音轨的持久化状态"
                 }
             },
@@ -34,7 +35,7 @@ export const musicPlayerBlueprint: Blueprint = {
             }
         }
     }
-};
+});
 
 // ===================================================================
 // 2. 业务服务 (The Business Service)

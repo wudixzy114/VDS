@@ -76,3 +76,11 @@ export type CommandHandler = (
 ) => Promise<HandlerResult>;
 
 export type CommandHandlerMap = Record<string, CommandHandler>
+
+export type ClusterStateType<B extends Blueprint, C extends keyof B['clusters']> = {
+    [SG in keyof B['clusters'][C]['stateGroups']]:
+    B['clusters'][C]['stateGroups'][SG]['states'][number];
+}
+
+export type StateGroupStates<B extends Blueprint, C extends keyof B['clusters'], SG extends keyof B['clusters'][C]['stateGroups']> =
+    B['clusters'][C]['stateGroups'][SG]['states'][number];
