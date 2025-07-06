@@ -25,7 +25,7 @@ export interface EventMetadata {
 
 export interface StateGroupDefinition {
     readonly initial: string;
-    readonly state: readonly string[];
+    readonly states: readonly string[];
     readonly description?: string;
 }
 
